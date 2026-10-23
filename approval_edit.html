@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Edit {{ approval['name'] }}</h2>
+<form action="{{ url_for('edit_approval', approval_id=approval['id']) }}" method="POST" enctype="multipart/form-data">
+    {{ csrf_input() }}
+    <div class="form-grid">
+        <div class="form-field full-width">
+            <label for="notes">Notes</label>
+            <textarea name="notes" id="notes" maxlength="1000">{{ approval['notes'] }}</textarea>
+        </div>
+        <div class="form-field full-width">
+            <label for="status">Internal review status</label>
+            <select name="status" id="status">
+                <option value="Pending" {% if approval['status'] == 'Pending' %}selected{% endif %}>Pending</option>
+                <option value="Verified" {% if approval['status'] == 'Verified' %}selected{% endif %}>Verified — internally reviewed</option>
+                <option value="N/A" {% if approval['status'] == 'N/A' %}selected{% endif %}>N/A</option>
+            </select>
+            <small>“Verified” records an internal review only; it does not establish authenticity with an issuing authority.</small>
+        </div>
+        <div class="form-field full-width">
+            <label for="document">Replace document (optional)</label>
+            <input type="file" name="document" id="document" accept=".pdf,application/pdf">
+            <small>PDF files only. Uploading a replacement replaces the current PDF.</small>
+        </div>
+    </div>
+    <button class="btn" type="submit">Save Changes</button>
+    <a class="btn btn-secondary" href="{{ url_for('project_approvals', project_id=approval['project_id'], selected=approval['id']) }}">Cancel</a>
+</form>
+{% endblock %}

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f7f6f2">
+    <title>Set up admin access | SIDDA Construction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="login-page">
+    <main class="login-card">
+        <a class="brand login-brand" href="{{ url_for('public_portfolio') }}" aria-label="SIDDA Construction portfolio">
+            <img src="{{ url_for('static', filename='images/sidda-logo.png') }}" alt="SIDDA Construction">
+        </a>
+        <p class="eyebrow">PRIVATE PROJECT WORKSPACE</p>
+        <h1>Set up admin access</h1>
+        <p class="muted">Create a password to protect project records and document uploads. This one-time setup works only from this computer.</p>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <p class="flash {{ category }}" role="status">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <form action="{{ url_for('setup_admin') }}" method="POST">
+            {{ csrf_input() }}
+            <label for="password">New admin password</label>
+            <input type="password" id="password" name="password" autocomplete="new-password" minlength="12" maxlength="1024" required autofocus>
+            <label for="confirm-password">Confirm password</label>
+            <input type="password" id="confirm-password" name="confirm_password" autocomplete="new-password" minlength="12" maxlength="1024" required>
+            <p class="muted">Use at least 12 characters. The password is stored as a secure hash, not as plain text.</p>
+            <button class="btn login-submit" type="submit">Create admin password</button>
+        </form>
+        <a class="login-public-link" href="{{ url_for('public_portfolio') }}">View the public portfolio</a>
+    </main>
+</body>
+</html>

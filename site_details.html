@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading">
+    <div>
+        <h2>Site Details</h2>
+        <p class="muted">{{ project['project_name'] }} — {{ project['client_name'] }}</p>
+    </div>
+    <div class="page-links">
+        <a href="{{ url_for('project_approvals', project_id=project['id']) }}" class="btn btn-secondary">Documents</a>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Back to Projects</a>
+    </div>
+</div>
+<p class="muted">Upload the Sale Deed as a PDF (maximum 10 MB).</p>
+
+<div class="site-workspace">
+    <section class="site-detail-panel" aria-live="polite">
+        {% if is_complete %}
+            <p class="eyebrow">SALE DEED STEP COMPLETE</p>
+            <h3>Sale Deed document</h3>
+            {% if incomplete_details %}
+                <p>The Sale Deed PDF still needs to be uploaded:</p>
+                <ul class="remaining-documents">
+                    {% for detail in incomplete_details %}
+                        <li><a href="{{ url_for('project_site_details', project_id=project['id'], selected=detail['id']) }}">{{ detail['name'] }}</a></li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>The Sale Deed PDF has been uploaded.</p>
+            {% endif %}
+            <div class="step-navigation">
+                {% if details %}
+                    <a class="btn btn-secondary" href="{{ url_for('project_site_details', project_id=project['id'], selected=details[0]['id']) }}">Previous</a>
+                {% endif %}
+                <a class="btn btn-secondary" href="{{ url_for('index') }}">Finish</a>
+            </div>
+        {% elif selected_detail %}
+            <div class="site-detail-heading">
+                <div>
+                    <p class="eyebrow">SITE DETAIL {{ selected_index + 1 }} OF {{ details|length }}</p>
+                    <h3>{{ selected_detail['name'] }}</h3>
+                </div>
+            </div>
+
+            <div class="site-detail-value">
+                <span class="detail-label">Document</span>
+                <p>Upload the Sale Deed PDF for this project.</p>
+            </div>
+
+            <div class="site-document-card">
+                <div>
+                    <span class="detail-label">Supporting document</span>
+                    {% if selected_detail['filename'] %}
+                        <p class="pdf-label">PDF uploaded and ready to view</p>
+                    {% else %}
+                        <p class="muted">No PDF uploaded yet</p>
+                    {% endif %}
+                </div>
+                <div class="site-actions">
+                    <form class="site-upload-form" action="{{ url_for('upload_site_detail_document', detail_id=selected_detail['id']) }}" method="POST" enctype="multipart/form-data">
+                        {{ csrf_input() }}
+                        <label class="file-picker" for="site-detail-pdf">Choose PDF</label>
+                        <input class="visually-hidden-file" type="file" id="site-detail-pdf" name="document" accept=".pdf,application/pdf" required>
+                        <button class="btn btn-small" type="submit">Upload</button>
+                    </form>
+
+                    {% if selected_detail['filename'] %}
+                        <a class="btn btn-small btn-secondary" href="{{ url_for('view_site_detail_document', detail_id=selected_detail['id']) }}" target="_blank" rel="noopener">View</a>
+                        <a class="btn btn-small btn-secondary" href="{{ url_for('download_site_detail_document', detail_id=selected_detail['id']) }}">Download</a>
+                    {% else %}
+                        <span class="btn btn-small btn-secondary btn-disabled" aria-disabled="true">View</span>
+                        <span class="btn btn-small btn-secondary btn-disabled" aria-disabled="true">Download</span>
+                    {% endif %}
+
+                    <a class="btn btn-small btn-secondary" href="{{ url_for('edit_site_detail', detail_id=selected_detail['id']) }}">Edit</a>
+                    <form action="{{ url_for('delete_site_detail_document', detail_id=selected_detail['id']) }}" method="POST" onsubmit="return confirm('Delete this uploaded PDF? The saved value will be kept.');">
+                        {{ csrf_input() }}
+                        <button class="btn btn-small btn-danger" type="submit" {% if not selected_detail['filename'] %}disabled title="No uploaded PDF to delete"{% endif %}>Delete</button>
+                    </form>
+                </div>
+            </div>
+
+            <p class="workflow-hint">Upload the Sale Deed PDF. This is the only item in Site Details.</p>
+            <nav class="step-navigation" aria-label="Site detail navigation">
+                <a class="btn btn-secondary" href="{{ url_for('index') }}">Back to Projects</a>
+                <a class="btn" href="{{ url_for('project_property_documents', project_id=project['id'], step='sale-deed') }}">Upload Sale Deed PDF</a>
+            </nav>
+        {% else %}
+            <p class="muted">No site details are available for this project.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

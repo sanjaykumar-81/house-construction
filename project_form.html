@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>New Project Entry</h2>
+<form id="projectForm" action="{{ url_for('add_project') }}" method="POST" enctype="multipart/form-data">
+    {{ csrf_input() }}
+    <div class="form-grid">
+        <div class="form-field">
+            <label for="client_name">Client Name</label>
+            <input type="text" name="client_name" id="client_name" required>
+        </div>
+
+        <div class="form-field">
+            <label for="project_name">Project Name</label>
+            <input type="text" name="project_name" id="project_name" required>
+        </div>
+
+        <div class="form-field">
+            <label for="budget">Budget (&#8377; INR)</label>
+            <input type="number" step="0.01" min="0.01" name="budget" id="budget" required>
+        </div>
+
+        <div class="form-field">
+            <label for="status">Project Status</label>
+            <select name="status" id="status">
+                <option value="Planning">Planning</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+            </select>
+        </div>
+
+        <div class="form-field full-width">
+            <label for="file">Attach Plans (optional)</label>
+            <input type="file" name="file" id="file" accept=".pdf,application/pdf">
+            <small>PDF files only.</small>
+        </div>
+    </div>
+
+    <button class="btn" type="submit">Save Project</button>
+</form>
+<script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+{% endblock %}

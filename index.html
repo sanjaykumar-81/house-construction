@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}Projects Dashboard | SIDDA Construction{% endblock %}
+{% block content %}
+{% set stats = namespace(in_progress=0, budget=0) %}
+{% for p in projects %}
+    {% if p['status'] == 'In Progress' %}
+        {% set stats.in_progress = stats.in_progress + 1 %}
+    {% endif %}
+    {% set stats.budget = stats.budget + p['budget'] %}
+{% endfor %}
+
+<section class="dashboard-intro">
+    <div>
+        <p class="eyebrow">SIDDA CONSTRUCTION · PROJECT WORKSPACE</p>
+        <h1>Build something <span>lasting.</span></h1>
+        <p class="intro-copy">Your projects, property documents and construction plans, all in one place.</p>
+    </div>
+    <a class="btn" href="{{ url_for('add_project') }}">Create a project <span aria-hidden="true">→</span></a>
+</section>
+
+<section class="stats-grid" aria-label="Project overview">
+    <article class="stat-card">
+        <span class="stat-label">Total projects</span>
+        <strong>{{ projects|length }}</strong>
+        <span class="stat-caption">Projects in your workspace</span>
+    </article>
+    <article class="stat-card">
+        <span class="stat-label">In progress</span>
+        <strong>{{ stats.in_progress }}</strong>
+        <span class="stat-caption">Currently under construction</span>
+    </article>
+    <article class="stat-card stat-card-accent">
+        <span class="stat-label">Portfolio budget</span>
+        <strong>&#8377;{{ stats.budget|inr }}</strong>
+        <span class="stat-caption">Combined project budgets</span>
+    </article>
+</section>
+
+<section class="projects-section" id="projects">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">YOUR WORKSPACE</p>
+            <h2>Projects</h2>
+        </div>
+        <span class="project-count">{{ projects|length }} total</span>
+    </div>
+
+    {% if projects %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Project</th>
+                    <th scope="col">Client</th>
+                    <th scope="col">Budget</th>
+                    <th scope="col">Stage</th>
+                    <th scope="col">Documents</th>
+                    <th scope="col">Site details</th>
+                    <th scope="col">Manage</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in projects %}
+                {% set statuses = document_summaries[p['id']] %}
+                <tr>
+                    <td>{{ p['id'] }}</td>
+                    <td class="project-name">{{ p['project_name'] }}</td>
+                    <td>{{ p['client_name'] }}</td>
+                    <td class="budget-cell">&#8377;{{ p['budget']|inr }}</td>
+                    <td><span class="status-pill status-{{ p['status']|lower|replace(' ', '-') }}">{{ p['status'] }}</span></td>
+                    <td>
+                        <div class="approval-summary">
+                            {% for item in statuses if item['kind'] == 'approval' %}
+                                {% set status_class = 'status-' ~ item['status']|lower|replace('/', '-') %}
+                                <a class="approval-chip {{ status_class }}" href="{{ url_for('edit_approval', approval_id=item['id']) }}" title="{{ item['status'] }} — edit internal review status">{{ item['name'] }} <span>{{ item['status'] }}</span></a>
+                            {% endfor %}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="approval-summary">
+                            {% for item in statuses if item['kind'] == 'site detail' and item['name'] == 'Sale Deed' %}
+                                <a class="approval-chip status-{{ item['status']|lower|replace('/', '-') }}" href="{{ url_for('project_property_documents', project_id=p['id'], step='sale-deed') }}" title="Open Sale Deed PDF upload">{{ item['name'] }} <span>{{ 'Uploaded' if item['filename'] else 'Pending' }}</span></a>
+                            {% endfor %}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="project-actions">
+                            <a class="manage-link" href="{{ url_for('manage_project_website', project_id=p['id']) }}">Website &amp; media</a>
+                            {% if p['is_published'] %}
+                                <a href="{{ url_for('public_project', project_id=p['id']) }}" target="_blank" rel="noopener">Live website ↗</a>
+                            {% else %}
+                                <span class="muted">Draft</span>
+                            {% endif %}
+                            <a href="{{ url_for('project_property_documents', project_id=p['id']) }}">Property documents</a>
+                            <a href="{{ url_for('project_approvals', project_id=p['id']) }}">All approvals</a>
+                            <a href="{{ url_for('project_plans', project_id=p['id']) }}">Plans</a>
+                            <a href="{{ url_for('project_construction_budget', project_id=p['id']) }}">Budget &amp; timeline</a>
+                            <a href="{{ url_for('generate_pdf', id=p['id']) }}" aria-label="Download report for {{ p['project_name'] }}">Report <span aria-hidden="true">↓</span></a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <span class="empty-mark" aria-hidden="true">+</span>
+        <h3>Your first project starts here</h3>
+        <p>Add a project to organize its plans, site information and property documents.</p>
+        <a class="btn" href="{{ url_for('add_project') }}">Add your first project</a>
+    </div>
+    {% endif %}
+</section>
+
+<section class="projects-section quote-inbox" id="quote-requests">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">CLIENT ENQUIRIES</p>
+            <h2>Quote requests</h2>
+        </div>
+        <span class="project-count">{{ quotes|length }} recent</span>
+    </div>
+    {% if quotes %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th scope="col">Received</th><th scope="col">Client</th><th scope="col">Contact</th><th scope="col">Service</th><th scope="col">Area</th><th scope="col">Indicative estimate</th><th scope="col">Details</th></tr>
+                </thead>
+                <tbody>
+                    {% for quote in quotes %}
+                        <tr>
+                            <td>{{ quote['created_at'] }}</td>
+                            <td class="project-name">{{ quote['name'] }}{% if quote['location'] %}<br><span class="muted">{{ quote['location'] }}</span>{% endif %}</td>
+                            <td><a href="tel:{{ quote['phone'] }}">{{ quote['phone'] }}</a>{% if quote['email'] %}<br><a href="mailto:{{ quote['email'] }}">{{ quote['email'] }}</a>{% endif %}</td>
+                            <td>{{ quote['service'] }}</td>
+                            <td>{{ quote['area_sqft']|inr }} sq ft</td>
+                            <td class="budget-cell">&#8377;{{ quote['budget_estimate']|inr }}</td>
+                            <td>{{ quote['message'] or '—' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="media-empty-state">No client quote requests yet. New website enquiries will appear here.</div>
+    {% endif %}
+</section>
+
+<section class="projects-section construction-budget-inbox" id="construction-budgets">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">PROJECT PLANNING</p>
+            <h2>Construction Budget Sheets</h2>
+        </div>
+        <span class="project-count">{{ projects|length }} projects</span>
+    </div>
+    {% if projects %}
+        <div class="budget-dashboard-list">
+            {% for p in projects %}
+                <article class="budget-dashboard-row">
+                    <div>
+                        <h3>{{ p['project_name'] }}</h3>
+                        <p class="muted">{{ p['client_name'] }} · Project #{{ p['id'] }}</p>
+                    </div>
+                    <a class="btn btn-small" href="{{ url_for('project_construction_budget', project_id=p['id']) }}">Open budget sheet <span aria-hidden="true">→</span></a>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="media-empty-state">Add a project to create its construction budget sheet.</div>
+    {% endif %}
+</section>
+<p class="internal-review-note">Document statuses are internal tracking only. “Verified” does not confirm the authenticity of a document with a government or issuing authority.</p>
+{% endblock %}

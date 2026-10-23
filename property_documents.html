@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Property Documents | SIDDA Construction{% endblock %}
+{% block content %}
+<div class="page-heading">
+    <div>
+        <h2>Property Documents</h2>
+        <p class="muted">{{ project['project_name'] }} — {{ project['client_name'] }}</p>
+    </div>
+    <div class="page-links">
+        <a href="{{ url_for('project_approvals', project_id=project['id']) }}" class="btn btn-secondary">All approvals</a>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Back to Projects</a>
+    </div>
+</div>
+<p class="muted">Upload one PDF for each document. After a successful upload, the wizard automatically opens the next document. PDF files up to 10 MB are accepted.</p>
+
+<div class="site-workspace">
+    <aside class="site-sidebar" aria-label="Property document steps">
+        <h3>Document steps</h3>
+        <nav class="site-detail-list">
+            {% for step in steps %}
+                <a class="site-detail-link {% if selected_step and step['key'] == selected_step['key'] %}selected{% endif %}"
+                   href="{{ url_for('project_property_documents', project_id=project['id'], step=step['key']) }}"
+                   {% if selected_step and step['key'] == selected_step['key'] %}aria-current="step"{% endif %}>
+                    <span class="site-detail-link-name">{{ loop.index }}. {{ step['name'] }}</span>
+                    {% if step['document']['filename'] %}<span class="status-pill status-verified">Uploaded</span>{% else %}<span class="status-pill status-pending">Needed</span>{% endif %}
+                </a>
+            {% endfor %}
+        </nav>
+    </aside>
+
+    <section class="site-detail-panel" aria-live="polite">
+        {% if is_complete %}
+            <p class="eyebrow">DOCUMENT UPLOAD STEPS COMPLETE</p>
+            <h3>Property document checklist</h3>
+            {% if incomplete_steps %}
+                <p>These documents still need a PDF:</p>
+                <ul class="remaining-documents">
+                    {% for step in incomplete_steps %}
+                        <li><a href="{{ url_for('project_property_documents', project_id=project['id'], step=step['key']) }}">{{ step['name'] }}</a></li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>All requested property document PDFs have been uploaded.</p>
+            {% endif %}
+            <nav class="step-navigation" aria-label="Property document navigation">
+                {% if steps %}
+                    <a class="btn btn-secondary" href="{{ url_for('project_property_documents', project_id=project['id'], step=steps[-1]['key']) }}">Previous</a>
+                    <a class="btn" href="{{ url_for('project_property_documents', project_id=project['id'], step=steps[0]['key']) }}">Start again</a>
+                {% endif %}
+            </nav>
+        {% elif selected_step %}
+            <div class="site-detail-heading">
+                <div>
+                    <p class="eyebrow">DOCUMENT {{ selected_index + 1 }} OF {{ steps|length }}</p>
+                    <h3>{{ selected_step['name'] }}</h3>
+                </div>
+            </div>
+
+            <div class="site-document-card">
+                <div>
+                    <span class="detail-label">PDF document</span>
+                    {% if selected_step['document']['filename'] %}
+                        <p class="pdf-label">PDF uploaded and ready to view</p>
+                    {% else %}
+                        <p class="muted">No PDF uploaded yet</p>
+                    {% endif %}
+                </div>
+                <div class="site-actions">
+                    <form class="site-upload-form" action="{{ url_for('upload_property_document', project_id=project['id'], step_key=selected_step['key']) }}" method="POST" enctype="multipart/form-data">
+                        {{ csrf_input() }}
+                        <label class="file-picker" for="property-document-pdf">Choose PDF</label>
+                        <input class="visually-hidden-file" type="file" id="property-document-pdf" name="document" accept=".pdf,application/pdf" required>
+                        <button class="btn btn-small" type="submit">Upload &amp; Next</button>
+                    </form>
+
+                    {% if selected_step['document']['filename'] %}
+                        {% if selected_step['kind'] == 'site detail' %}
+                            <a class="btn btn-small btn-secondary" href="{{ url_for('view_site_detail_document', detail_id=selected_step['document']['id']) }}" target="_blank" rel="noopener">View</a>
+                            <a class="btn btn-small btn-secondary" href="{{ url_for('download_site_detail_document', detail_id=selected_step['document']['id']) }}">Download</a>
+                        {% else %}
+                            <a class="btn btn-small btn-secondary" href="{{ url_for('view_approval_document', approval_id=selected_step['document']['id']) }}" target="_blank" rel="noopener">View</a>
+                            <a class="btn btn-small btn-secondary" href="{{ url_for('download_approval_document', approval_id=selected_step['document']['id']) }}">Download</a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <p class="workflow-hint">Choose a PDF and click Upload &amp; Next to save it and continue. Use the buttons below to move through the list without uploading yet.</p>
+            <nav class="step-navigation" aria-label="Property document navigation">
+                {% if selected_index > 0 %}
+                    <a class="btn btn-secondary" href="{{ url_for('project_property_documents', project_id=project['id'], step=steps[selected_index - 1]['key']) }}">Previous</a>
+                {% else %}
+                    <span class="btn btn-secondary btn-disabled" aria-disabled="true">Previous</span>
+                {% endif %}
+                {% if selected_index + 1 < steps|length %}
+                    <a class="btn" href="{{ url_for('project_property_documents', project_id=project['id'], step=steps[selected_index + 1]['key']) }}">Next</a>
+                {% else %}
+                    <a class="btn" href="{{ url_for('project_property_documents', project_id=project['id'], complete=1) }}">Finish</a>
+                {% endif %}
+            </nav>
+        {% else %}
+            <p class="muted">No property document steps are available for this project.</p>
+        {% endif %}
+    </section>
+</div>
+<p class="muted">Uploaded property documents remain private to the project workspace. Upload genuine documents only; internal status does not confirm authenticity with an issuing authority.</p>
+{% endblock %}

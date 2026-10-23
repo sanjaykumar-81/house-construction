@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f7f6f2">
+    <title>Admin sign in | SIDDA Construction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="login-page">
+    <main class="login-card">
+        <a class="brand login-brand" href="{{ url_for('public_portfolio') }}" aria-label="SIDDA Construction portfolio">
+            <img src="{{ url_for('static', filename='images/sidda-logo.png') }}" alt="SIDDA Construction">
+        </a>
+        <p class="eyebrow">PROJECT WORKSPACE</p>
+        <h1>Admin sign in</h1>
+        <p class="muted">Sign in to manage projects, plans and website media.</p>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <p class="flash {{ category }}" role="status">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% if configuration_error %}
+            <p class="flash error" role="alert">Admin access has not been set up yet.</p>
+            {% if setup_available %}
+                <a class="btn login-submit" href="{{ url_for('setup_admin') }}">Set up admin password</a>
+            {% else %}
+                <p class="muted">Admin setup is available only from the computer running this site.</p>
+            {% endif %}
+        {% else %}
+            <form action="{{ url_for('login', next=request.args.get('next', '')) }}" method="POST">
+                {{ csrf_input() }}
+                <label for="password">Admin password</label>
+                <input type="password" id="password" name="password" autocomplete="current-password" required autofocus>
+                <button class="btn login-submit" type="submit">Sign in</button>
+            </form>
+        {% endif %}
+        <a class="login-public-link" href="{{ url_for('public_portfolio') }}">View the public portfolio</a>
+    </main>
+</body>
+</html>

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Edit {{ detail['name'] }}</h2>
+<p class="muted">Update the property value, document status, or upload a replacement PDF.</p>
+<form action="{{ url_for('edit_site_detail', detail_id=detail['id']) }}" method="POST" enctype="multipart/form-data">
+    {{ csrf_input() }}
+    <div class="form-grid">
+        <div class="form-field full-width">
+            <label for="value">{{ detail['name'] }}</label>
+            {% if detail['name'] == 'Site Address' %}
+                <textarea name="value" id="value" maxlength="1000" placeholder="Enter the complete site address">{{ detail['value'] }}</textarea>
+            {% else %}
+                <input type="text" name="value" id="value" maxlength="1000" value="{{ detail['value'] }}" placeholder="Enter {{ detail['name'] }}">
+            {% endif %}
+        </div>
+        <div class="form-field full-width">
+            <label for="document">Replace PDF (optional)</label>
+            <input type="file" name="document" id="document" accept=".pdf,application/pdf">
+            <small>PDF files only, maximum 10 MB. Uploading a replacement replaces the current PDF.</small>
+        </div>
+        <div class="form-field full-width">
+            <label for="status">Internal review status</label>
+            <select name="status" id="status">
+                <option value="Pending" {% if detail['status'] == 'Pending' %}selected{% endif %}>Pending</option>
+                <option value="Verified" {% if detail['status'] == 'Verified' %}selected{% endif %}>Verified — internally reviewed</option>
+                <option value="N/A" {% if detail['status'] == 'N/A' %}selected{% endif %}>N/A</option>
+            </select>
+            <small>“Verified” records an internal review only; it does not establish authenticity with an issuing authority.</small>
+        </div>
+    </div>
+    <button class="btn" type="submit">Save Changes</button>
+    <a class="btn btn-secondary" href="{{ url_for('project_site_details', project_id=detail['project_id'], selected=detail['id']) }}">Cancel</a>
+</form>
+{% endblock %}

@@ -1,0 +1,221 @@
+{% extends "public_base.html" %}
+{% block title %}SIDDA Construction | Homes, Designs &amp; Construction{% endblock %}
+{% block content %}
+<section class="landing-hero" id="home">
+    <div class="landing-hero-copy">
+        <p class="eyebrow">SIDDA CONSTRUCTION · HOMES · DESIGN · BUILD</p>
+        <h1>Build a home that feels <span>like yours.</span></h1>
+        <p>Thoughtful planning, dependable construction and clear guidance—from your first drawing to the final detail.</p>
+        <div class="hero-actions">
+            <a class="btn" href="#quote">Get a free consultation <span aria-hidden="true">→</span></a>
+            <a class="btn btn-secondary" href="#projects">Explore our projects</a>
+        </div>
+        <div class="hero-promise"><span aria-hidden="true">✓</span> Plans, progress and project support in one place</div>
+    </div>
+    <div class="landing-hero-art" aria-hidden="true">
+        <div class="hero-blueprint-grid"></div>
+        <div class="hero-house">
+            <div class="hero-roof"></div>
+            <div class="hero-building">
+                <span class="hero-window hero-window-one"></span>
+                <span class="hero-window hero-window-two"></span>
+                <span class="hero-door"></span>
+            </div>
+            <div class="hero-tower"></div>
+            <div class="hero-ground"></div>
+        </div>
+        <span class="hero-art-label">DESIGNED AROUND YOU</span>
+    </div>
+</section>
+
+<section class="about-section" id="about">
+    <div class="about-copy">
+        <p class="eyebrow">A BETTER WAY TO BUILD</p>
+        <h2>Good construction starts with listening.</h2>
+        <p>Every site and every family is different. We help bring the details together—your requirements, the plans, the site and the build—so you can make decisions with confidence.</p>
+        <p>From early planning to construction coordination, SIDDA Construction is here to make the process clearer and the finished space truly yours.</p>
+        <a class="text-link" href="#services">See how we can help <span aria-hidden="true">→</span></a>
+    </div>
+    <div class="about-note">
+        <span class="about-mark" aria-hidden="true">S</span>
+        <p class="eyebrow">THE SIDDA APPROACH</p>
+        <h3>Plan clearly.<br>Build thoughtfully.</h3>
+        <p>Practical guidance and a considered process at every step.</p>
+    </div>
+</section>
+
+<section class="services-section" id="services">
+    <div class="section-heading">
+        <div><p class="eyebrow">HOW WE CAN HELP</p><h2>Construction services</h2></div>
+        <a class="text-link" href="#quote">Discuss your project <span aria-hidden="true">→</span></a>
+    </div>
+    <div class="service-grid">
+        <article class="service-card">
+            <span class="service-icon" aria-hidden="true">⌂</span>
+            <p class="eyebrow">01 · BUILD</p>
+            <h3>Home construction</h3>
+            <p>Planning and construction support for a home designed around your site, needs and budget.</p>
+        </article>
+        <article class="service-card">
+            <span class="service-icon" aria-hidden="true">▧</span>
+            <p class="eyebrow">02 · DESIGN</p>
+            <h3>Architecture &amp; floor plans</h3>
+            <p>Explore layout ideas and project plans before moving into the build.</p>
+        </article>
+        <article class="service-card">
+            <span class="service-icon" aria-hidden="true">↗</span>
+            <p class="eyebrow">03 · IMPROVE</p>
+            <h3>Renovation &amp; extensions</h3>
+            <p>Thoughtful improvements that make your existing space work better for you.</p>
+        </article>
+        <article class="service-card">
+            <span class="service-icon" aria-hidden="true">◇</span>
+            <p class="eyebrow">04 · COORDINATE</p>
+            <h3>Site &amp; project guidance</h3>
+            <p>Bring site details, drawings and project documents together in a clear workflow.</p>
+        </article>
+    </div>
+</section>
+
+<section class="portfolio-projects" id="projects">
+    <div class="section-heading">
+        <div><p class="eyebrow">BUILT BY SIDDA</p><h2>Projects &amp; floor plans</h2></div>
+        <span class="project-count">{{ projects|length }} projects</span>
+    </div>
+    {% if projects %}
+        <div class="portfolio-grid">
+            {% for project in projects %}
+                <a class="portfolio-card" href="{{ url_for('public_project', project_id=project['id']) }}">
+                    {% if project['cover_media_id'] %}
+                        <img class="portfolio-cover" src="{{ url_for('public_media', media_id=project['cover_media_id']) }}" alt="" loading="lazy">
+                    {% else %}
+                        <div class="portfolio-placeholder" aria-hidden="true"><span>SIDDA</span></div>
+                    {% endif %}
+                    <div class="portfolio-card-copy">
+                        <span class="eyebrow">{{ project['status'] }}</span>
+                        <h3>{{ project['project_name'] }}</h3>
+                        {% if project['location'] %}<p>{{ project['location'] }}</p>{% endif %}
+                        <span class="portfolio-view">Photos, plans &amp; project details <span aria-hidden="true">→</span></span>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <span class="empty-mark" aria-hidden="true">⌂</span>
+            <h3>Our featured projects are on the way</h3>
+            <p>We are preparing our portfolio. Contact us to talk about the home you have in mind.</p>
+            <a class="btn" href="#quote">Talk about your project</a>
+        </div>
+    {% endif %}
+</section>
+
+<section class="docs-section" id="site-documents">
+    <div>
+        <p class="eyebrow">FROM THE SITE TO THE DRAWING</p>
+        <h2>A clearer view of your project.</h2>
+        <p>Explore published project galleries, site locations, maps, 3D views and floor plans. Sale Deeds, Encumbrance Certificates (EC), A &amp; B Khata Certificates and Property Tax Receipts are organized privately in the project workspace.</p>
+        <a class="text-link" href="#projects">Explore featured projects <span aria-hidden="true">→</span></a>
+    </div>
+    <div class="docs-checklist">
+        <div><span class="docs-check-icon">01</span><span><strong>Sale Deed</strong><small>Stored privately with the project records.</small></span></div>
+        <div><span class="docs-check-icon">02</span><span><strong>Encumbrance Certificate (EC)</strong><small>Tracked with an internal review status.</small></span></div>
+        <div><span class="docs-check-icon">03</span><span><strong>A &amp; B Khata Certificates</strong><small>Both Khata document types are supported.</small></span></div>
+        <div><span class="docs-check-icon">04</span><span><strong>Property Tax Receipts</strong><small>Stored privately with the project records.</small></span></div>
+        <p class="private-docs-note">These property documents are private and are not shown to public website visitors.</p>
+    </div>
+</section>
+
+<section class="estimator-section" id="estimator">
+    <div class="estimator-copy">
+        <p class="eyebrow">START WITH A ROUGH IDEA</p>
+        <h2>Construction cost estimator</h2>
+        <p>Enter your planned built-up area and an example rate to see a simple starting estimate.</p>
+        <p class="estimate-disclaimer">Illustrative estimate only—not a SIDDA quote. These sample rates must be replaced with your actual local rates before relying on the result. Final cost depends on design, materials, site conditions, approvals and finishes.</p>
+    </div>
+    <div class="estimator-card">
+        <div class="estimator-inputs">
+            <div class="form-field">
+                <label for="estimate-area">Built-up area (sq ft)</label>
+                <input type="number" id="estimate-area" min="100" max="100000" step="50" value="1200">
+            </div>
+            <div class="form-field">
+                <label for="estimate-rate">Example rate per sq ft</label>
+                <select id="estimate-rate">
+                    <option value="1800">Basic example · ₹1,800</option>
+                    <option value="2400" selected>Standard example · ₹2,400</option>
+                    <option value="3200">Premium example · ₹3,200</option>
+                </select>
+            </div>
+        </div>
+        <div class="estimate-result" aria-live="polite">
+            <span>Illustrative construction estimate</span>
+            <strong id="estimate-total">&#8377;28,80,000</strong>
+            <small id="estimate-breakdown">1,200 sq ft × ₹2,400 per sq ft</small>
+        </div>
+        <a class="btn" href="#quote" id="estimate-quote-link">Request a real quote <span aria-hidden="true">→</span></a>
+    </div>
+</section>
+
+<section class="quote-section" id="quote">
+    <div class="quote-intro">
+        <p class="eyebrow">LET’S TALK ABOUT YOUR PROJECT</p>
+        <h2>Get a free quote.</h2>
+        <p>Share a few details and our team can follow up to learn more about your plans.</p>
+        <div class="quote-contact-note"><span aria-hidden="true">✳</span><span>This form sends your enquiry to the SIDDA project dashboard. The estimate is a starting point, not a confirmed offer.</span></div>
+    </div>
+    <form class="quote-form" action="{{ url_for('request_quote') }}" method="POST">
+        {{ csrf_input() }}
+        <div class="honeypot-field" aria-hidden="true">
+            <label for="website">Leave this field blank</label>
+            <input type="text" name="website" id="website" tabindex="-1" autocomplete="off">
+        </div>
+        <div class="form-grid">
+            <div class="form-field">
+                <label for="quote-name">Your name</label>
+                <input type="text" id="quote-name" name="name" maxlength="100" autocomplete="name" required>
+            </div>
+            <div class="form-field">
+                <label for="quote-phone">Phone number</label>
+                <input type="tel" id="quote-phone" name="phone" maxlength="30" autocomplete="tel" required>
+            </div>
+            <div class="form-field">
+                <label for="quote-email">Email address <span class="muted">(optional)</span></label>
+                <input type="email" id="quote-email" name="email" maxlength="254" autocomplete="email">
+            </div>
+            <div class="form-field">
+                <label for="quote-location">Project location</label>
+                <input type="text" id="quote-location" name="location" maxlength="300" placeholder="City or area">
+            </div>
+            <div class="form-field">
+                <label for="quote-service">Service you need</label>
+                <select id="quote-service" name="service" required>
+                    <option value="">Choose a service</option>
+                    <option>New home construction</option>
+                    <option>Renovation</option>
+                    <option>Design &amp; floor plans</option>
+                    <option>Commercial construction</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label for="quote-area">Approximate built-up area (sq ft)</label>
+                <input type="number" id="quote-area" name="area_sqft" min="100" max="100000" value="1200" required>
+            </div>
+            <div class="form-field full-width">
+                <label for="quote-rate">Example estimate rate per sq ft</label>
+                <select id="quote-rate" name="rate_per_sqft" required>
+                    <option value="1800">Basic example · ₹1,800</option>
+                    <option value="2400" selected>Standard example · ₹2,400</option>
+                    <option value="3200">Premium example · ₹3,200</option>
+                </select>
+            </div>
+            <div class="form-field full-width">
+                <label for="quote-message">Tell us a little more <span class="muted">(optional)</span></label>
+                <textarea id="quote-message" name="message" maxlength="2000" rows="3" placeholder="What are you hoping to build?"></textarea>
+            </div>
+        </div>
+        <button class="btn" type="submit">Send quote request <span aria-hidden="true">→</span></button>
+        <p class="form-privacy-note">Your contact information is sent to SIDDA Construction so the team can respond to your enquiry.</p>
+    </form>
+</section>
+{% endblock %}

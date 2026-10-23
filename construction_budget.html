@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}Construction Budget &amp; Timeline | SIDDA Construction{% endblock %}
+{% block content %}
+<div class="page-heading">
+    <div>
+        <p class="eyebrow">PROJECT WORKSPACE</p>
+        <h2>Budget &amp; construction timeline</h2>
+        <p class="muted">{{ project['project_name'] }} — {{ project['client_name'] }}</p>
+    </div>
+    <div class="page-links">
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Back to Projects</a>
+    </div>
+</div>
+
+<section class="construction-summary" aria-label="Budget summary">
+    <div>
+        <span class="stat-label">Floor-by-floor costs</span>
+        <strong>&#8377;{{ budget_total|inr }}</strong>
+        <span class="stat-caption">Includes shared building costs</span>
+    </div>
+    <div>
+        <span class="stat-label">Planned duration</span>
+        <strong>{{ request.form.get('duration_months', schedule['duration_months']) }} months</strong>
+        <span class="stat-caption">Planning estimate; confirm with your contractor</span>
+    </div>
+</section>
+
+<section class="budget-section payment-section" aria-labelledby="payment-heading">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">CUSTOMER RECORDS</p>
+            <h2 id="payment-heading">Completed work &amp; payments received</h2>
+        </div>
+        <div class="payment-total">
+            <span class="stat-label">Total received</span>
+            <strong>&#8377;{{ payments_total|inr }}</strong>
+        </div>
+    </div>
+    <p class="payment-help">Add a record for each customer payment. Sanjay, Mohan, Vicky and Rakshith are name suggestions only; no sample payments are saved.</p>
+    <datalist id="customer-name-suggestions">
+        <option value="Sanjay">
+        <option value="Mohan">
+        <option value="Vicky">
+        <option value="Rakshith">
+    </datalist>
+    {% if customer_payments %}
+        <div class="payment-record-list">
+            {% for payment in customer_payments %}
+                <article class="payment-record">
+                    <form class="payment-entry-form" action="{{ url_for('save_customer_payment', project_id=project['id']) }}" method="POST">
+                        {{ csrf_input() }}
+                        <input type="hidden" name="action" value="edit">
+                        <input type="hidden" name="payment_id" value="{{ payment['id'] }}">
+                        <div class="form-field">
+                            <label for="customer-{{ payment['id'] }}">Customer name</label>
+                            <input id="customer-{{ payment['id'] }}" name="customer_name" list="customer-name-suggestions" maxlength="100" value="{{ payment['customer_name'] }}" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="work-{{ payment['id'] }}">Completed work</label>
+                            <input id="work-{{ payment['id'] }}" name="completed_work" maxlength="500" value="{{ payment['completed_work'] }}" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="received-{{ payment['id'] }}">Amount received (₹)</label>
+                            <input id="received-{{ payment['id'] }}" name="amount_received" type="number" min="0.01" max="1000000000000" step="0.01" value="{{ payment['amount_received'] }}" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="payment-date-{{ payment['id'] }}">Payment date</label>
+                            <input id="payment-date-{{ payment['id'] }}" name="payment_date" type="date" value="{{ payment['payment_date'] }}">
+                        </div>
+                        <div class="payment-update-action">
+                            <button class="btn btn-small" type="submit">Update record</button>
+                        </div>
+                    </form>
+                    <form class="payment-delete-form" action="{{ url_for('save_customer_payment', project_id=project['id']) }}" method="POST" onsubmit="return confirm('Delete this customer payment record?');">
+                        {{ csrf_input() }}
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="payment_id" value="{{ payment['id'] }}">
+                        <button class="btn btn-small btn-danger" type="submit">Delete</button>
+                    </form>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="payment-empty">No customer payments recorded yet.</p>
+    {% endif %}
+    <form class="payment-add-form" action="{{ url_for('save_customer_payment', project_id=project['id']) }}" method="POST">
+        {{ csrf_input() }}
+        <input type="hidden" name="action" value="add">
+        <h3>Add customer payment</h3>
+        <div class="payment-entry-form">
+            <div class="form-field">
+                <label for="new-customer">Customer name</label>
+                <input id="new-customer" name="customer_name" list="customer-name-suggestions" maxlength="100" placeholder="e.g. Sanjay" required>
+            </div>
+            <div class="form-field">
+                <label for="new-work">Completed work</label>
+                <input id="new-work" name="completed_work" maxlength="500" placeholder="e.g. First-floor slab completed" required>
+            </div>
+            <div class="form-field">
+                <label for="new-amount">Amount received (₹)</label>
+                <input id="new-amount" name="amount_received" type="number" min="0.01" max="1000000000000" step="0.01" placeholder="e.g. 100000" required>
+            </div>
+            <div class="form-field">
+                <label for="new-payment-date">Payment date</label>
+                <input id="new-payment-date" name="payment_date" type="date">
+            </div>
+        </div>
+        <button class="btn" type="submit">Add payment record</button>
+    </form>
+</section>
+
+<p class="budget-disclaimer">Enter contractor-quoted amounts in rupees. Each floor has its own cost breakdown; the lift and other shared items are counted once, not once per floor. Blank estimates start at ₹0 and are not quotations.</p>
+
+<form class="construction-budget-form" action="{{ url_for('project_construction_budget', project_id=project['id']) }}" method="POST">
+    {{ csrf_input() }}
+    <section class="budget-section">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">GROUND + 10 FLOORS</p>
+                <h2>Floor costs</h2>
+            </div>
+        </div>
+        <div class="floor-budget-grid">
+            {% for floor in floors %}
+                <article class="floor-budget-card">
+                    <div class="floor-budget-heading">
+                        <h3>{{ floor['name'] }}</h3>
+                        <strong>&#8377;{{ floor['total']|inr }}</strong>
+                    </div>
+                    {% for item in floor['items'] %}
+                        <div class="budget-input-row">
+                            <label for="amount-{{ item['id'] }}">{{ item['category'] }}</label>
+                            <div class="rupee-input">
+                                <span aria-hidden="true">&#8377;</span>
+                                <input id="amount-{{ item['id'] }}" name="amount_{{ item['id'] }}" type="number" min="0" max="1000000000000" step="0.01" value="{{ item['amount'] }}" required>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="budget-section">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">COUNT ONCE FOR THE BUILDING</p>
+                <h2>Common costs</h2>
+            </div>
+            <strong class="common-total">&#8377;{{ common_total|inr }}</strong>
+        </div>
+        <div class="common-budget-grid">
+            {% for item in common_items %}
+                <div class="budget-input-row">
+                    <label for="amount-{{ item['id'] }}">{{ item['category'] }}</label>
+                    <div class="rupee-input">
+                        <span aria-hidden="true">&#8377;</span>
+                        <input id="amount-{{ item['id'] }}" name="amount_{{ item['id'] }}" type="number" min="0" max="1000000000000" step="0.01" value="{{ item['amount'] }}" required>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="budget-section schedule-section">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">PROJECT TIMELINE</p>
+                <h2>Construction schedule</h2>
+            </div>
+        </div>
+        <div class="form-grid">
+            <div class="form-field">
+                <label for="duration-months">Estimated duration (months)</label>
+                <input id="duration-months" name="duration_months" type="number" min="1" max="120" step="1" value="{{ request.form.get('duration_months', schedule['duration_months']) }}" required>
+                <small>Earlier discussion used 18–30 months as a rough range. Confirm the schedule with your project team.</small>
+            </div>
+            <div class="form-field">
+                <label for="start-date">Planned start date (optional)</label>
+                <input id="start-date" name="start_date" type="date" value="{{ request.form.get('start_date', schedule['start_date']) }}">
+            </div>
+            <div class="form-field full-width">
+                <label for="schedule-notes">Milestones or notes (optional)</label>
+                <textarea id="schedule-notes" name="notes" maxlength="2000">{{ request.form.get('notes', schedule['notes']) }}</textarea>
+            </div>
+        </div>
+    </section>
+
+    <button class="btn" type="submit">Save budget &amp; timeline</button>
+    <a class="btn btn-secondary" href="{{ url_for('index') }}">Cancel</a>
+</form>
+{% endblock %}

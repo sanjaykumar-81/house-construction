@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Website &amp; Media | {{ project['project_name'] }}{% endblock %}
+{% block content %}
+<div class="page-heading">
+    <div>
+        <p class="eyebrow">PROJECT WEBSITE</p>
+        <h2>{{ project['project_name'] }}</h2>
+        <p class="muted">Add project details and media, then publish a page for clients to view.</p>
+    </div>
+    <div class="page-links">
+        <a class="btn btn-secondary" href="{{ url_for('index') }}">Back to dashboard</a>
+        {% if project['is_published'] %}
+            <a class="btn" href="{{ url_for('public_project', project_id=project['id']) }}" target="_blank" rel="noopener">View live page ↗</a>
+        {% endif %}
+    </div>
+</div>
+
+<section class="website-editor">
+    <div class="editor-heading">
+        <div>
+            <p class="eyebrow">1 · PROJECT INFORMATION</p>
+            <h3>Tell visitors about this project</h3>
+        </div>
+        {% if project['is_published'] %}
+            <span class="status-pill status-in-progress">Published</span>
+        {% else %}
+            <span class="status-pill">Private draft</span>
+        {% endif %}
+    </div>
+    <form action="{{ url_for('manage_project_website', project_id=project['id']) }}" method="POST">
+        {{ csrf_input() }}
+        <div class="form-grid">
+            <div class="form-field">
+                <label for="project_name">Project name</label>
+                <input type="text" id="project_name" name="project_name" maxlength="120" value="{{ project['project_name'] }}" required>
+            </div>
+            <div class="form-field">
+                <label for="location">Project location</label>
+                <input type="text" id="location" name="location" maxlength="300" value="{{ project['location'] }}" placeholder="Area, city or full address">
+                <small>Adding a location also shows a map on the public project page.</small>
+            </div>
+            <div class="form-field full-width">
+                <label for="description">Project description</label>
+                <textarea id="description" name="description" maxlength="3000" rows="5" placeholder="Describe the project, design, materials or progress for potential clients.">{{ project['description'] }}</textarea>
+                <small>Up to 3,000 characters. This description is public when the project is published.</small>
+            </div>
+        </div>
+        <label class="publish-toggle">
+            <input type="checkbox" name="is_published" {% if project['is_published'] %}checked{% endif %}>
+            <span><strong>Publish this project</strong><small>Anyone with your portfolio website can see this page and its uploaded media.</small></span>
+        </label>
+        <button class="btn" type="submit">Save website details</button>
+    </form>
+</section>
+
+<section class="website-editor media-editor">
+    <div class="editor-heading">
+        <div>
+            <p class="eyebrow">2 · PROJECT GALLERY</p>
+            <h3>Photos, maps, 3D views &amp; blueprints</h3>
+            <p class="muted">Upload JPG, PNG or WebP images, MP4/WebM videos, GLB 3D models and PDF blueprints. Maximum 50 MB per file and 75 MB per upload.</p>
+        </div>
+    </div>
+    <form class="media-upload-form" action="{{ url_for('upload_project_media', project_id=project['id']) }}" method="POST" enctype="multipart/form-data">
+        {{ csrf_input() }}
+        <div class="form-grid">
+            <div class="form-field">
+                <label for="category">Media type</label>
+                <select id="category" name="category" required>
+                    <option value="photo">Project photos &amp; videos</option>
+                    <option value="map">Map image</option>
+                    <option value="3d">Interactive 3D model (.glb)</option>
+                    <option value="blueprint">Blueprint / floor plan</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label for="title">Gallery title (optional)</label>
+                <input type="text" id="title" name="title" maxlength="120" placeholder="Uses each file name if left blank">
+            </div>
+            <div class="form-field full-width">
+                <label for="media-files">Choose files</label>
+                <input type="file" id="media-files" name="files" accept=".jpg,.jpeg,.png,.webp,.mp4,.webm,.glb,.pdf" multiple required>
+                <small>GLB files are self-contained 3D models. Use the Map image type for a map picture, or add a location above to display a live map.</small>
+            </div>
+        </div>
+        <button class="btn" type="submit">Upload to project</button>
+    </form>
+
+    {% if media %}
+        <div class="media-admin-list">
+            {% for item in media %}
+                <article class="media-admin-card">
+                    <div class="media-admin-info">
+                        <span class="media-category">{{ item['category']|replace('3d', '3D')|title }}</span>
+                        <strong>{{ item['title'] }}</strong>
+                        <span class="muted">{{ item['original_name'] }}</span>
+                    </div>
+                    <div class="media-admin-actions">
+                        <a class="btn btn-small btn-secondary" href="{{ url_for('admin_media', media_id=item['id']) }}" target="_blank" rel="noopener">Preview</a>
+                        <form action="{{ url_for('delete_project_media', media_id=item['id']) }}" method="POST" onsubmit="return confirm('Delete this project media?');">
+                            {{ csrf_input() }}
+                            <button class="btn btn-small btn-danger" type="submit">Delete</button>
+                        </form>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="media-empty-state">No gallery files uploaded yet. Add photos, maps, 3D models or blueprints above.</div>
+    {% endif %}
+</section>
+<script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+{% endblock %}

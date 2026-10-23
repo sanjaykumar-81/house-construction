@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading">
+    <div>
+        <h2>Plans</h2>
+        <p class="muted">{{ project['project_name'] }} — {{ project['client_name'] }}</p>
+    </div>
+    <div class="page-links">
+        <a href="{{ url_for('project_site_details', project_id=project['id']) }}" class="btn btn-secondary">Site Details</a>
+        <a href="{{ url_for('project_approvals', project_id=project['id']) }}" class="btn btn-secondary">Property Documents</a>
+        <a href="{{ url_for('project_construction_budget', project_id=project['id']) }}" class="btn btn-secondary">Budget &amp; Timeline</a>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Back to Projects</a>
+    </div>
+</div>
+
+<section class="site-detail-panel" aria-labelledby="plans-heading">
+    <h3 id="plans-heading">Architectural &amp; Construction Plans</h3>
+    <p class="muted">Upload the project blueprint or plan as a PDF (maximum 10 MB).</p>
+
+    <div class="site-document-card">
+        <div>
+            <span class="detail-label">Project plans</span>
+            {% if project['filename'] %}
+                <p class="pdf-label">Plans PDF uploaded and ready to view</p>
+            {% else %}
+                <p class="muted">No plans PDF uploaded yet</p>
+            {% endif %}
+        </div>
+        <div class="site-actions">
+            <form class="site-upload-form" action="{{ url_for('upload_project_plan', project_id=project['id']) }}" method="POST" enctype="multipart/form-data">
+                {{ csrf_input() }}
+                <label class="file-picker" for="project-plan-pdf">Choose PDF</label>
+                <input class="visually-hidden-file" type="file" id="project-plan-pdf" name="document" accept=".pdf,application/pdf" required>
+                <button class="btn btn-small" type="submit">Upload</button>
+            </form>
+
+            {% if project['filename'] %}
+                <a class="btn btn-small btn-secondary" href="{{ url_for('view_project_plan', project_id=project['id']) }}" target="_blank" rel="noopener">View</a>
+                <a class="btn btn-small btn-secondary" href="{{ url_for('download_project_plan', project_id=project['id']) }}">Download</a>
+            {% else %}
+                <span class="btn btn-small btn-secondary btn-disabled" aria-disabled="true">View</span>
+                <span class="btn btn-small btn-secondary btn-disabled" aria-disabled="true">Download</span>
+            {% endif %}
+
+            <form action="{{ url_for('delete_project_plan', project_id=project['id']) }}" method="POST" onsubmit="return confirm('Delete the uploaded plans PDF?');">
+                {{ csrf_input() }}
+                <button class="btn btn-small btn-danger" type="submit" {% if not project['filename'] %}disabled title="No uploaded plans PDF to delete"{% endif %}>Delete</button>
+            </form>
+        </div>
+    </div>
+</section>
+
+{% if can_apply %}
+    <form action="{{ url_for('apply_for_approval', project_id=project['id']) }}" method="POST">
+        {{ csrf_input() }}
+        <button class="btn" type="submit">Apply for approval</button>
+    </form>
+{% else %}
+    <p class="muted">Complete all site details, upload the plan PDF, and add all required property documents before applying.</p>
+{% endif %}
+
+<nav class="step-navigation" aria-label="Project document workflow">
+    <a class="btn btn-secondary" href="{{ url_for('project_site_details', project_id=project['id']) }}">Previous: Site Details</a>
+    <a class="btn" href="{{ url_for('project_approvals', project_id=project['id']) }}">Next: Property Documents</a>
+</nav>
+{% endblock %}

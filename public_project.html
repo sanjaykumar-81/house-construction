@@ -1,0 +1,116 @@
+{% extends "public_base.html" %}
+{% block title %}{{ project['project_name'] }} | SIDDA Construction{% endblock %}
+{% block head %}
+    <meta name="description" content="{{ project['description'][:155] if project['description'] else project['project_name'] ~ ' by SIDDA Construction' }}">
+    {% if media|selectattr('category', 'equalto', '3d')|list %}
+        <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+    {% endif %}
+{% endblock %}
+{% block content %}
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="{{ url_for('public_portfolio') }}">Our Projects</a><span aria-hidden="true">/</span><span>{{ project['project_name'] }}</span>
+</nav>
+<section class="showcase-heading">
+    <div>
+        <p class="eyebrow">SIDDA CONSTRUCTION · {{ project['status']|upper }}</p>
+        <h1>{{ project['project_name'] }}</h1>
+        {% if project['location'] %}<p class="showcase-location">{{ project['location'] }}</p>{% endif %}
+    </div>
+</section>
+{% if project['description'] %}
+    <section class="showcase-description">
+        <p>{{ project['description'] }}</p>
+    </section>
+{% endif %}
+
+{% set photos = media|selectattr('category', 'equalto', 'photo')|list %}
+{% if photos %}
+    <section class="showcase-section">
+        <div class="section-heading"><div><p class="eyebrow">PROJECT GALLERY</p><h2>Photos &amp; videos</h2></div></div>
+        <div class="showcase-grid">
+            {% for item in photos %}
+                <article class="showcase-media-card">
+                    {% if item['filename'].lower().endswith(('.mp4', '.webm')) %}
+                        <video controls preload="metadata" src="{{ url_for('public_media', media_id=item['id']) }}">Your browser does not support video playback.</video>
+                    {% else %}
+                        <a class="showcase-image-link" href="{{ url_for('public_media', media_id=item['id']) }}" target="_blank" rel="noopener">
+                            <img src="{{ url_for('public_media', media_id=item['id']) }}" alt="{{ item['title'] }}" loading="lazy">
+                        </a>
+                    {% endif %}
+                    <h3>{{ item['title'] }}</h3>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+{% endif %}
+
+{% if project['location'] or media|selectattr('category', 'equalto', 'map')|list %}
+    <section class="showcase-section">
+        <div class="section-heading"><div><p class="eyebrow">FIND THE SITE</p><h2>Location &amp; maps</h2></div></div>
+        {% if project['location'] %}
+            <div class="map-frame">
+                <iframe title="Map showing {{ project['location'] }}" src="https://maps.google.com/maps?q={{ map_query }}&amp;output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+            </div>
+            <p class="map-address">{{ project['location'] }}</p>
+        {% endif %}
+        {% set maps = media|selectattr('category', 'equalto', 'map')|list %}
+        {% if maps %}
+            <div class="showcase-grid map-images">
+                {% for item in maps %}
+                    <figure class="showcase-media-card">
+                        <a class="showcase-image-link" href="{{ url_for('public_media', media_id=item['id']) }}" target="_blank" rel="noopener">
+                            <img src="{{ url_for('public_media', media_id=item['id']) }}" alt="{{ item['title'] }}" loading="lazy">
+                        </a>
+                        <figcaption>{{ item['title'] }}</figcaption>
+                    </figure>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </section>
+{% endif %}
+
+{% set models = media|selectattr('category', 'equalto', '3d')|list %}
+{% if models %}
+    <section class="showcase-section">
+        <div class="section-heading"><div><p class="eyebrow">EXPLORE THE DESIGN</p><h2>Interactive 3D views</h2></div></div>
+        <div class="showcase-grid">
+            {% for item in models %}
+                <article class="showcase-media-card model-card">
+                    <model-viewer src="{{ url_for('public_media', media_id=item['id']) }}" alt="{{ item['title'] }} 3D model" camera-controls auto-rotate shadow-intensity="1" ar>
+                        <span slot="poster">{{ item['title'] }} — interactive 3D model</span>
+                    </model-viewer>
+                    <h3>{{ item['title'] }}</h3>
+                    <p class="muted">Drag to rotate · Scroll to zoom</p>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+{% endif %}
+
+{% set plans = media|selectattr('category', 'equalto', 'blueprint')|list %}
+{% if plans %}
+    <section class="showcase-section">
+        <div class="section-heading"><div><p class="eyebrow">DESIGN &amp; DETAIL</p><h2>Blueprints &amp; floor plans</h2></div></div>
+        <div class="blueprint-list">
+            {% for item in plans %}
+                {% if item['filename'].lower().endswith('.pdf') %}
+                    <article class="blueprint-card">
+                        <div class="blueprint-icon" aria-hidden="true">PDF</div>
+                        <div><h3>{{ item['title'] }}</h3><p>{{ item['original_name'] }}</p></div>
+                        <a class="btn btn-secondary" href="{{ url_for('public_media', media_id=item['id']) }}" target="_blank" rel="noopener">View plan ↗</a>
+                    </article>
+                {% else %}
+                    <article class="showcase-media-card blueprint-image-card">
+                        <a class="showcase-image-link" href="{{ url_for('public_media', media_id=item['id']) }}" target="_blank" rel="noopener">
+                            <img src="{{ url_for('public_media', media_id=item['id']) }}" alt="{{ item['title'] }}" loading="lazy">
+                        </a>
+                        <h3>{{ item['title'] }}</h3>
+                    </article>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </section>
+{% endif %}
+
+<div class="showcase-back"><a class="btn btn-secondary" href="{{ url_for('public_portfolio') }}">← All projects</a></div>
+{% endblock %}

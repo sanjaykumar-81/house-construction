@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-heading">
+    <div>
+        <h2>Property Documents</h2>
+        <p class="muted">{{ project['project_name'] }} — {{ project['client_name'] }}</p>
+    </div>
+    <div class="page-links">
+        <a href="{{ url_for('project_property_documents', project_id=project['id']) }}" class="btn btn-secondary">Property Documents</a>
+        <a href="{{ url_for('project_site_details', project_id=project['id']) }}" class="btn btn-secondary">Site Details</a>
+        <a href="{{ url_for('project_plans', project_id=project['id']) }}" class="btn btn-secondary">Plans</a>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Back to Projects</a>
+    </div>
+</div>
+<p class="muted">Upload and review the property and approval documents for this project. Mark a document Verified only after your internal review, then continue to the project plans.</p>
+
+<div class="site-workspace">
+    <aside class="site-sidebar" aria-label="Property documents">
+        <h3>Documents</h3>
+        <nav class="site-detail-list">
+            {% for approval in approvals %}
+                <a class="site-detail-link {% if selected_approval and approval['id'] == selected_approval['id'] %}selected{% endif %}"
+                   href="{{ url_for('project_approvals', project_id=project['id'], selected=approval['id']) }}"
+                   {% if selected_approval and approval['id'] == selected_approval['id'] %}aria-current="page"{% endif %}>
+                    <span class="site-detail-link-name">{{ approval['name'] }}</span>
+                </a>
+            {% endfor %}
+        </nav>
+    </aside>
+
+    <section class="site-detail-panel" aria-live="polite">
+        {% if is_complete %}
+            <p class="eyebrow">PROPERTY DOCUMENTS COMPLETE</p>
+            <h3>Continue to project plans</h3>
+            {% if incomplete_approvals %}
+                <p>You reached the end of the list. These documents still need a PDF:</p>
+                <ul class="remaining-documents">
+                    {% for approval in incomplete_approvals %}
+                        <li><a href="{{ url_for('project_approvals', project_id=project['id'], selected=approval['id']) }}">{{ approval['name'] }}</a></li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>All four property document PDFs have been uploaded.</p>
+            {% endif %}
+            <div class="step-navigation">
+                {% if approvals %}
+                    <a class="btn btn-secondary" href="{{ url_for('project_approvals', project_id=project['id'], selected=approvals[-1]['id']) }}">Previous</a>
+                    <a class="btn" href="{{ url_for('project_approvals', project_id=project['id'], selected=approvals[0]['id']) }}">Start again</a>
+                {% endif %}
+                {% if can_apply %}
+                    <form action="{{ url_for('apply_for_approval', project_id=project['id']) }}" method="POST">
+                        {{ csrf_input() }}
+                        <button class="btn" type="submit">Apply for approval</button>
+                    </form>
+                {% else %}
+                    <span class="btn btn-secondary btn-disabled" aria-disabled="true">Apply for approval</span>
+                {% endif %}
+                <a class="btn btn-secondary" href="{{ url_for('project_plans', project_id=project['id']) }}">Go to Plans</a>
+            </div>
+        {% elif selected_approval %}
+            <div class="site-detail-heading">
+                <div>
+                    <p class="eyebrow">DOCUMENT {{ selected_index + 1 }} OF {{ approvals|length }}</p>
+                    <h3>{{ selected_approval['name'] }}</h3>
+                </div>
+            </div>
+
+            {% if selected_approval['notes'] %}
+                <div class="site-detail-value">
+                    <span class="detail-label">Notes</span>
+                    <p>{{ selected_approval['notes'] }}</p>
+                </div>
+            {% endif %}
+
+            <div class="site-document-card">
+                <div>
+                    <span class="detail-label">Property document</span>
+                    {% if selected_approval['filename'] %}
+                        <p class="pdf-label">PDF uploaded and ready to view</p>
+                    {% else %}
+                        <p class="muted">No PDF uploaded yet</p>
+                    {% endif %}
+                </div>
+                <div class="site-actions">
+                    <form class="site-upload-form" action="{{ url_for('upload_approval', approval_id=selected_approval['id']) }}" method="POST" enctype="multipart/form-data">
+                        {{ csrf_input() }}
+                        <label class="file-picker" for="approval-pdf">Choose PDF</label>
+                        <input class="visually-hidden-file" type="file" id="approval-pdf" name="document" accept=".pdf,application/pdf" required>
+                        <button class="btn btn-small" type="submit">Upload</button>
+                    </form>
+
+                    {% if selected_approval['filename'] %}
+                        <a class="btn btn-small btn-secondary" href="{{ url_for('view_approval_document', approval_id=selected_approval['id']) }}" target="_blank" rel="noopener">View</a>
+                        <a class="btn btn-small btn-secondary" href="{{ url_for('download_approval_document', approval_id=selected_approval['id']) }}">Download</a>
+                    {% else %}
+                        <span class="btn btn-small btn-secondary btn-disabled" aria-disabled="true">View</span>
+                        <span class="btn btn-small btn-secondary btn-disabled" aria-disabled="true">Download</span>
+                    {% endif %}
+
+                    <a class="btn btn-small btn-secondary" href="{{ url_for('edit_approval', approval_id=selected_approval['id']) }}">Edit</a>
+                    <form action="{{ url_for('delete_approval_document', approval_id=selected_approval['id']) }}" method="POST" onsubmit="return confirm('Delete this uploaded document?');">
+                        {{ csrf_input() }}
+                        <button class="btn btn-small btn-danger" type="submit" {% if not selected_approval['filename'] %}disabled title="No uploaded PDF to delete"{% endif %}>Delete</button>
+                    </form>
+                </div>
+            </div>
+
+            <p class="workflow-hint">Finish this document, then click Next to continue. You can return to earlier documents with Previous.</p>
+            <nav class="step-navigation" aria-label="Document navigation">
+                {% if selected_index > 0 %}
+                    <a class="btn btn-secondary" href="{{ url_for('project_approvals', project_id=project['id'], selected=approvals[selected_index - 1]['id']) }}">Previous</a>
+                {% else %}
+                    <span class="btn btn-secondary btn-disabled" aria-disabled="true">Previous</span>
+                {% endif %}
+                {% if selected_index + 1 < approvals|length %}
+                    <a class="btn" href="{{ url_for('project_approvals', project_id=project['id'], selected=approvals[selected_index + 1]['id']) }}">Next</a>
+                {% else %}
+                    {% if can_apply %}
+                        <form action="{{ url_for('apply_for_approval', project_id=project['id']) }}" method="POST">
+                            {{ csrf_input() }}
+                            <button class="btn" type="submit">Apply for approval</button>
+                        </form>
+                    {% else %}
+                        <span class="btn btn-secondary btn-disabled" aria-disabled="true">Apply for approval</span>
+                    {% endif %}
+                    <a class="btn btn-secondary" href="{{ url_for('project_plans', project_id=project['id']) }}">Back to Plans</a>
+                {% endif %}
+            </nav>
+        {% else %}
+            <p class="muted">No property documents are available for this project.</p>
+        {% endif %}
+    </section>
+</div>
+<p class="muted">Upload genuine property documents. Verification here records your review and does not confirm authenticity with an issuing authority.</p>
+{% endblock %}
